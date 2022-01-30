@@ -53,7 +53,7 @@ pub fn drain(mut trim: String) -> String {
     trim
 }
 
-pub fn r#unsafe(trim: String) -> String {
+pub fn r#unsafe(mut trim: String) -> String {
     // rfind would be cleaner, but this is is consise.
     let end_trimmed = trim.trim_end().len();
     if end_trimmed == 0 {
@@ -65,16 +65,15 @@ pub fn r#unsafe(trim: String) -> String {
     }
     let start_trimmed = trim.len() - trim.trim_start().len();
 
-    // Moving needs to happen on bytes, since strings must always be valid utf-8
-    let mut bytes = trim.into_bytes();
-    if start_trimmed != 0 {
-        for (from, to) in (start_trimmed..end_trimmed).zip(0..) {
-            unsafe { *bytes.get_unchecked_mut(to) = *bytes.get_unchecked(from) }
-        }
-    }
-
     unsafe {
+        let bytes = trim.as_mut_vec();
+        if start_trimmed != 0 {
+            for (from, to) in (start_trimmed..end_trimmed).zip(0..) {
+                *bytes.get_unchecked_mut(to) = *bytes.get_unchecked(from)
+            }
+        }
+
         bytes.set_len(end_trimmed - start_trimmed);
-        String::from_utf8_unchecked(bytes)
     }
+    trim
 }
